@@ -50,7 +50,7 @@
       box-shadow: 0px 0px 0px 2px rgba(0, 0, 0, 0.3);
       background-color: rgba(255, 255, 255, 0.5);
       line-height: 18px;
-      height: 108px;
+      height: 175px;
       margin-bottom: 40px;
       width: 110px;
     }
@@ -179,40 +179,12 @@
             ]
           },
           "filter": ['<=', ['number',['get', 'RC_YR']],initYear]
-        }
-      ]
-    }
-/*
-    // Define vector tile style
-    const style = {
-      "version": 8,
-      "sources": { // the sources for your tile sets
-        'raster-tiles': {
-          "maxzoom": 16,
-          "tileSize": 256,
-          "tiles": [
-            "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-          ],
-          "type": "raster"
-        },
-        "composite": {
-          "type": "vector",
-          "tiles": [location.origin + location.pathname + "slc_parcels_restricted_tiles/{z}/{x}/{y}.pbf"]
-        }
-      },
-      // notice how you identify and style the vector tile layers in the following "layers" array
-      "layers": [{
-          'id': 'simple-tiles',
-          'type': 'raster',
-          'source': 'raster-tiles',
-          'minzoom': 0,
-          'maxzoom': 16
         },
         {
-          "id": "slc_parcels_restricted", // this is the id you can use later to add popup content and conditional styles
+          "id": "stl_city", // this is the id you can use later to add popup content and conditional styles
           "type": "fill", // "fill" means this is a polygon -- other types exist for lines, points, etc -- see mapbox-gl.js documentation
           "source": "composite",
-          "source-layer": "SLC_Parcels_restricted", // this is the name of the geojson layer
+          "source-layer": "stl_city_parcels", // this is the name of the geojson layer
           "layout": {},
           'minzoom': 0,
           'maxzoom': 16,
@@ -223,22 +195,22 @@
               'yellow',
               [
                 'match',
-                ['get', 'RC_TYPE'],
-                'sub', 'orange', 'pet', 'red', 'par', 'blue', '#ccc'
+                ['get', 'type'],
+                'sub', 'orange', 'pet', 'red', 'par', 'blue', 'priv', '#54cc20', 'privR', '#2d6e11', 'violet'
               ],
             ],
             "fill-opacity": 0.5,
             "fill-outline-color": [
               'match',
-              ['get', 'RC_TYPE'],
-              'sub', 'orange', 'pet', 'red', 'par', 'blue', '#ccc'
+              ['get', 'type'],
+              'sub', 'orange', 'pet', 'red', 'par', 'blue', 'priv', '#54cc20', 'privR', '#2d6e11', 'violet'
             ]
           },
-          "filter": ['<=', ['number',['get', 'RC_YR']],initYear]
+          "filter": ['<=', ['number',['get', 'year']],initYear]
         }
       ]
     };
-*/
+
     // define the map
     const map = new maplibregl.Map({
       container: 'map',
@@ -271,12 +243,18 @@
       const layers = [
         'subdivision',
         'petition',
-        'parcel'
+        'parcel',
+        'private street',
+        'private street with restrictions',
+        'other'
       ];
       const colors = [
         'orange',
         'red',
-        'blue'
+        'blue',
+        '#54cc20',
+        '#2d6e11',
+        'violet'
       ];
 
       // create legend
@@ -315,8 +293,6 @@
           });
         }
 
-        console.log(e.features[0]);
-
         hoverID = e.features[0].id;
 
         // When the mouse moves over the slc_parcels_restricted layer, update the
@@ -343,6 +319,49 @@
 
       });
 
+      // when you move your mouse over the layer identified below, do something...
+      // the formula for this is 'map.on({event}, {layer id}, function(x){})'
+      map.on('mousemove', "stl_city", function(e) {
+
+        // change the cursor style as a UI indicator.
+        map.getCanvas().style.cursor = 'pointer';
+
+        // If hoverID for the hovered feature is not null,
+        // use removeFeatureState to reset to the default behavior
+        if (hoverID) {
+          map.removeFeatureState({
+            source: 'composite',
+            sourceLayer: 'stl_city_parcels',
+            id: hoverID
+          });
+        }
+
+        hoverID = e.features[0].id;
+
+        // When the mouse moves over the slc_parcels_restricted layer, update the
+        // feature state for the feature under the mouse
+        map.setFeatureState({
+          source: 'composite',
+          sourceLayer: 'stl_city_parcels',
+          id: hoverID
+        }, {
+          hover: true
+        });
+
+        // define the layer properties
+        // with "e.features[0].properties," you have access to all of the properties from the initial geojson layer
+        let props = e.features[0].properties;
+
+        // get the popup defined above
+        popup
+          .setLngLat(e.lngLat) // the location of the cursor
+          .setHTML('<b>' + props.SITEADDR + '</b><br>City Block: ' + props.CITYBLOCK +
+            '<br>Legal: ' + props.LEGAL1 + '<br>Record Number: ' + props.CV_Book +
+            '<br>Year Restricted: ' + props.year) // feed the popup the prop info
+          .addTo(map) // add the popup to the map
+
+      });
+
       // when the mouse leaves the vector...
       map.on('mouseleave', 'stl_county', function(e) {
 
@@ -358,6 +377,27 @@
           map.removeFeatureState({
             source: 'composite',
             sourceLayer: 'stl_county_parcels',
+            id: hoverID
+          });
+        }
+
+      });
+
+      // when the mouse leaves the vector...
+      map.on('mouseleave', 'stl_city', function(e) {
+
+        // change the cursor style back to initial setting
+        map.getCanvas().style.cursor = '';
+
+        // and remove the popup
+        popup.remove();
+
+        // If hoverID for the hovered feature is not null,
+        // use removeFeatureState to reset to the default behavior
+        if (hoverID) {
+          map.removeFeatureState({
+            source: 'composite',
+            sourceLayer: 'stl_city_parcels',
             id: hoverID
           });
         }
@@ -386,6 +426,7 @@
 
           // update the map
           map.setFilter('stl_county', ['<=', ['number', ['get', 'RC_YR']], year]);
+          map.setFilter('stl_city', ['<=', ['number', ['get', 'year']], year])
 /*
           // a decade filter
           map.setFilter('stl_county', [
