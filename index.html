@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset='utf-8' />
+  <title>St. Louis Metro Racially Restrictive Covenants</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+  <!-- maplibre-gl.css here -->
+  <link href='https://unpkg.com/maplibre-gl@2.1.7/dist/maplibre-gl.css' rel='stylesheet' />
+  <link href="https://fonts.googleapis.com/css?family=Rubik&display=swap" rel="stylesheet">
+
+  <!-- basic css to style the viewer goes below -->
+  <style>
+
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-family: 'Rubik', sans-serif;
+      padding-bottom: 0px;
+      padding-top: 0px;
+      font-weight: normal;
+    }
+
+    h2 {
+      font-size: 14px;
+      font-family: 'Rubik', sans-serif;
+      padding-bottom: 0px;
+      padding-top: 0px;
+      font-weight: normal;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+
+    #slider {
+      width:275px;
+    }
+
+    #legend {
+      padding-left: 10px;
+      box-shadow: 0px 0px 0px 2px rgba(0, 0, 0, 0.3);
+      background-color: rgba(255, 255, 255, 0.5);
+      line-height: 18px;
+      height: 108px;
+      margin-bottom: 40px;
+      width: 110px;
+    }
+
+    .session {
+      position: absolute;
+      z-index: 1;
+      background-color: rgba(255, 255, 255, 0.5);
+			border-radius: 3px;
+			box-shadow: 0px 0px 0px 2px rgba(0, 0, 0, 0.3);
+      top: 10px;
+      left: 10px;
+      padding: 5px;
+    }
+
+    .map-overlay {
+      position: absolute;
+      z-index: 1;
+      bottom: 0;
+      right: 0;
+      background: #fff;
+      margin-right: 20px;
+      font-family: 'Rubik', sans-serif;
+      font-size: 13px;
+      font-weight: normal;
+      overflow: auto;
+      border-radius: 3px;
+    }
+
+    .legend-key {
+      display: inline-block;
+      border-radius: 20%;
+      width: 10px;
+      height: 10px;
+      margin-right: 5px;
+    }
+
+    /* adjust the width of the popup to the width of the text */
+    .mapboxgl-popup-content {
+      width: max-content;
+    }
+
+  </style>
+</head>
+
+<body>
+  <!-- id the map div -->
+  <div id='map'></div>
+
+  <!-- time slider -->
+  <div class='session' id='sliderbar'>
+    <h1>Racially Restrictive Covenants<br>St. Louis Metro, 1870 - 1952</h1>
+    <h2>Year: <label id='active-year'>1952</label></h2>
+    <input id='slider' class='row' type='range' min='1870' max='1952' step='1' value='1952' />
+  </div>
+
+  <!-- choropleth legend -->
+  <div class='map-overlay' id='legend'>
+    <h2>Covenant Type</h2>
+  </div>
+
+  <!-- maplibre-gl.js library -->
+  <script src='https://unpkg.com/maplibre-gl@2.1.7/dist/maplibre-gl.js'></script>
+
+  <!-- jquery -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+  <script>
+
+    // define the initial slider-selected year
+    const initYear = parseInt(document.getElementById('slider').value);
+
+    // update text in the UI
+    document.getElementById('active-year').innerText = initYear;
+/*
+    // Define vector tile style
+    const style = {
+      "version": 8,
+      "sources": { // the sources for your tile sets
+        'raster-tiles': {
+          "maxzoom": 16,
+          "tileSize": 256,
+          "tiles": [
+            "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          ],
+          "type": "raster"
+        },
+        "composite": {
+          "type": "vector",
+          "tiles": [location.origin + location.pathname + "slc_parcels_restricted_tiles/{z}/{x}/{y}.pbf"]
+        }
+      },
+      // notice how you identify and style the vector tile layers in the following "layers" array
+      "layers": [{
+          'id': 'simple-tiles',
+          'type': 'raster',
+          'source': 'raster-tiles',
+          'minzoom': 0,
+          'maxzoom': 16
+        },
+        {
+          "id": "slc_parcels_restricted", // this is the id you can use later to add popup content and conditional styles
+          "type": "fill", // "fill" means this is a polygon -- other types exist for lines, points, etc -- see mapbox-gl.js documentation
+          "source": "composite",
+          "source-layer": "SLC_Parcels_restricted", // this is the name of the geojson layer
+          "layout": {},
+          'minzoom': 0,
+          'maxzoom': 16,
+          "paint": {
+            "fill-color": [
+              'case',
+              ['boolean', ['feature-state', 'hover'], false],
+              'yellow',
+              [
+                'match',
+                ['get', 'RC_TYPE'],
+                'sub', 'orange', 'pet', 'red', 'par', 'blue', '#ccc'
+              ],
+            ],
+            "fill-opacity": 0.5,
+            "fill-outline-color": [
+              'match',
+              ['get', 'RC_TYPE'],
+              'sub', 'orange', 'pet', 'red', 'par', 'blue', '#ccc'
+            ]
+          },
+          "filter": ['<=', ['number',['get', 'RC_YR']],initYear]
+        }
+      ]
+    };
+*/
+    // define the map
+    const map = new maplibregl.Map({
+      container: 'map',
+      bounds: [[-90.7366,38.3864], [-90.1177,38.8912]], // the coordinate boundaries of St. Louis County
+      maxZoom: 16,
+      style: style
+    });
+
+    // add zoom and rotation controls to the map.
+    map.addControl(new maplibregl.NavigationControl());
+
+    // add a scale bar
+    map.addControl(new maplibregl.ScaleControl(
+      {
+        position: 'bottom-left',
+        unit: 'imperial'
+      }
+    ));
+
+    // create a popup without adding to map
+    let popup = new maplibregl.Popup({
+      closeButton: false,
+      closeOnClick: false
+    });
+
+    // when the map loads, call a function
+    map.on('load', function() {
+
+      // define legend components
+      const layers = [
+        'subdivision',
+        'petition',
+        'parcel'
+      ];
+      const colors = [
+        'orange',
+        'red',
+        'blue'
+      ];
+
+      // create legend
+      const legend = document.getElementById('legend');
+
+      layers.forEach((layer, i) => {
+        const color = colors[i];
+        const item = document.createElement('div');
+        const key = document.createElement('span');
+        key.className = 'legend-key';
+        key.style.backgroundColor = color;
+
+        const value = document.createElement('span');
+        value.innerHTML = `${layer}`;
+        item.appendChild(key);
+        item.appendChild(value);
+        legend.appendChild(item);
+      });
+/*
+      let hoverID = null;
+
+      // when you move your mouse over the layer identified below, do something...
+      // the formula for this is 'map.on({event}, {layer id}, function(x){})'
+      map.on('mousemove', "slc_parcels_restricted", function(e) {
+
+        // change the cursor style as a UI indicator.
+        map.getCanvas().style.cursor = 'pointer';
+
+        // If hoverID for the hovered feature is not null,
+        // use removeFeatureState to reset to the default behavior
+        if (hoverID) {
+          map.removeFeatureState({
+            source: 'composite',
+            sourceLayer: 'SLC_Parcels_restricted',
+            id: hoverID
+          });
+        }
+
+        hoverID = e.features[0].id;
+
+        // When the mouse moves over the slc_parcels_restricted layer, update the
+        // feature state for the feature under the mouse
+        map.setFeatureState({
+          source: 'composite',
+          sourceLayer: 'SLC_Parcels_restricted',
+          id: hoverID
+        }, {
+          hover: true
+        });
+
+        // define the layer properties
+        // with "e.features[0].properties," you have access to all of the properties from the initial geojson layer
+        let props = e.features[0].properties;
+
+        // get the popup defined above
+        popup
+          .setLngLat(e.lngLat) // the location of the cursor
+          .setHTML('<b>' + props.PROP_ADD + '</b><br>Original Subdivision: ' + props.SUB_HIST +
+            '<br>Municipality (2022): ' + props.MUNICIPALI + '<br>Record Number: ' + props.DOC +
+            '<br>Year Restricted: ' + props.RC_YR) // feed the popup the prop info
+          .addTo(map) // add the popup to the map
+
+      });
+
+      // when the mouse leaves the vector...
+      map.on('mouseleave', 'slc_parcels_restricted', function(e) {
+
+        // change the cursor style back to initial setting
+        map.getCanvas().style.cursor = '';
+
+        // and remove the popup
+        popup.remove();
+
+        // If hoverID for the hovered feature is not null,
+        // use removeFeatureState to reset to the default behavior
+        if (hoverID) {
+          map.removeFeatureState({
+            source: 'composite',
+            sourceLayer: 'SLC_Parcels_restricted',
+            id: hoverID
+          });
+        }
+
+      });
+*/
+      // listen for a slider input
+      document.getElementById('slider').addEventListener('input', (event) => {
+
+        // define the newly-selected year
+        const year = parseInt(event.target.value);
+
+        // update text in the UI
+        document.getElementById('active-year').innerText = year;
+
+      });
+
+      // when there is a change in the time slider value
+      $('.session').on('change', (event) => {
+
+        // define the newly-selected year
+        const year = parseInt(event.target.value);
+/*
+        // wait until slider movement stops (prevents lagging with filtration)
+        Promise.resolve().then(_ => {
+
+          // update the map
+          map.setFilter('slc_parcels_restricted', ['<=', ['number', ['get', 'RC_YR']], year]);
+
+          // a decade filter
+          map.setFilter('slc_parcels_restricted', [
+            "all",
+            ['>=', ['number', ['get', 'RC_YR']], Math.floor(year/10)*10], // ex: 1940
+            ['<=', ['number', ['get', 'RC_YR']], Math.floor(year/10)*10 + 9] // ex: 1949
+          ])
+
+        });
+*/
+      });
+
+    });
+  </script>
+</body>
+
+</html>
