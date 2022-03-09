@@ -125,6 +125,63 @@
 
     // update text in the UI
     document.getElementById('active-year').innerText = initYear;
+
+    // define vector tile style
+    const style = {
+      "version": 8,
+      "sources": { // the sources for your tile sets
+        'raster-tiles': {
+          "maxzoom": 16,
+          "tileSize": 256,
+          "tiles": [
+            "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          ],
+          "type": "raster"
+        },
+        "composite": {
+          "type": "vector",
+          "tiles": [location.origin + location.pathname + "tiles/{z}/{x}/{y}.pbf"]
+        }
+      },
+      // notice how you identify and style the tile layers in the following "layers" array
+      "layers": [
+        {
+          'id': 'simple-tiles',
+          'type': 'raster',
+          'source': 'raster-tiles',
+          'minzoom': 0,
+          'maxzoom': 16
+        },
+        {
+          "id": "stl_county", // this is the id you can use later to add popup content and conditional styles
+          "type": "fill", // "fill" means this is a polygon -- other types exist for lines, points, etc -- see mapbox-gl.js documentation
+          "source": "composite",
+          "source-layer": "stl_county_parcels", // this is the name of the geojson layer
+          "layout": {},
+          'minzoom': 0,
+          'maxzoom': 16,
+          "paint": {
+            "fill-color": [
+              'case',
+              ['boolean', ['feature-state', 'hover'], false],
+              'yellow',
+              [
+                'match',
+                ['get', 'RC_TYPE'],
+                'sub', 'orange', 'pet', 'red', 'par', 'blue', '#ccc'
+              ],
+            ],
+            "fill-opacity": 0.5,
+            "fill-outline-color": [
+              'match',
+              ['get', 'RC_TYPE'],
+              'sub', 'orange', 'pet', 'red', 'par', 'blue', '#ccc'
+            ]
+          },
+          "filter": ['<=', ['number',['get', 'RC_YR']],initYear]
+        }
+      ]
+    }
 /*
     // Define vector tile style
     const style = {
@@ -238,12 +295,12 @@
         item.appendChild(value);
         legend.appendChild(item);
       });
-/*
+
       let hoverID = null;
 
       // when you move your mouse over the layer identified below, do something...
       // the formula for this is 'map.on({event}, {layer id}, function(x){})'
-      map.on('mousemove', "slc_parcels_restricted", function(e) {
+      map.on('mousemove', "stl_county", function(e) {
 
         // change the cursor style as a UI indicator.
         map.getCanvas().style.cursor = 'pointer';
@@ -253,10 +310,12 @@
         if (hoverID) {
           map.removeFeatureState({
             source: 'composite',
-            sourceLayer: 'SLC_Parcels_restricted',
+            sourceLayer: 'stl_county_parcels',
             id: hoverID
           });
         }
+
+        console.log(e.features[0]);
 
         hoverID = e.features[0].id;
 
@@ -264,7 +323,7 @@
         // feature state for the feature under the mouse
         map.setFeatureState({
           source: 'composite',
-          sourceLayer: 'SLC_Parcels_restricted',
+          sourceLayer: 'stl_county_parcels',
           id: hoverID
         }, {
           hover: true
@@ -285,7 +344,7 @@
       });
 
       // when the mouse leaves the vector...
-      map.on('mouseleave', 'slc_parcels_restricted', function(e) {
+      map.on('mouseleave', 'stl_county', function(e) {
 
         // change the cursor style back to initial setting
         map.getCanvas().style.cursor = '';
@@ -298,13 +357,13 @@
         if (hoverID) {
           map.removeFeatureState({
             source: 'composite',
-            sourceLayer: 'SLC_Parcels_restricted',
+            sourceLayer: 'stl_county_parcels',
             id: hoverID
           });
         }
 
       });
-*/
+
       // listen for a slider input
       document.getElementById('slider').addEventListener('input', (event) => {
 
@@ -321,22 +380,22 @@
 
         // define the newly-selected year
         const year = parseInt(event.target.value);
-/*
+
         // wait until slider movement stops (prevents lagging with filtration)
         Promise.resolve().then(_ => {
 
           // update the map
-          map.setFilter('slc_parcels_restricted', ['<=', ['number', ['get', 'RC_YR']], year]);
-
+          map.setFilter('stl_county', ['<=', ['number', ['get', 'RC_YR']], year]);
+/*
           // a decade filter
-          map.setFilter('slc_parcels_restricted', [
+          map.setFilter('stl_county', [
             "all",
             ['>=', ['number', ['get', 'RC_YR']], Math.floor(year/10)*10], // ex: 1940
             ['<=', ['number', ['get', 'RC_YR']], Math.floor(year/10)*10 + 9] // ex: 1949
           ])
-
-        });
 */
+        });
+
       });
 
     });
