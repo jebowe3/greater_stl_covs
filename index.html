@@ -222,6 +222,51 @@
       unit: 'imperial'
     }));
 
+    // create legend
+    function getColorPOC(d) {
+    return d >= 0.90 ? '#050505' :
+      d >= 0.75 ? '#363636' :
+      d >= 0.50 ? '#676767' :
+      d >= 0.25 ? '#989898' :
+      d >= 0.10 ? '#c9c9c9' :
+      d > 0.00 ? '#fafafa' :
+      'rgba(0,0,0,0.0)';
+    };
+
+    function getColorRestrictive(d) {
+      return d === 'par' ? 'blue' :
+        d === 'pet' ? 'red' :
+        d === 'priv' ? '#54cc20':
+        d === 'privR' ? '#2d6e11':
+        d === 'sub' ? 'orange' :
+        d === null ? '#ff9966':
+        'rgba(0,0,0,0.0)';
+    };
+
+    const legend = document.getElementById('legend');
+    const item = document.createElement('div');
+    item.innerHTML +=
+        "<div class='column1' style='width: 50%; float: left;'>" +
+          "<b style='font-size:13px'>Restriction Type</b>" +
+          '<br>' + '<i style="background:' + getColorRestrictive('par') + '"></i> ' + 'Parcel' +
+          '<br>' + '<i style="background:' + getColorRestrictive('pet') + '"></i> ' + 'Petition' +
+          '<br>' + '<i style="background:' + getColorRestrictive('priv') + '"></i> ' + 'Private Street' +
+          '<br>' + '<i style="background:' + getColorRestrictive('privR') + '"></i> ' + 'Private Street With Restrictions' +
+          '<br>' + '<i style="background:' + getColorRestrictive('sub') + '"></i> ' + 'Subdivision' +
+          //'<br>' + '<i style="background:' + getColorRestrictive(null) + '"></i> ' + 'Other' +
+        "</div>" +
+        "<div class='column2' style='margin-left: 55%;'>" +
+          "<b style='font-size:13px'>Share Black (City)</b>" +
+          '<br>' + '<i style="background:' + getColorPOC(0.91) + '"></i> ' + '>90%' +
+          '<br>' + '<i style="background:' + getColorPOC(0.76) + '"></i> ' + '75% - 89%' +
+          '<br>' + '<i style="background:' + getColorPOC(0.51) + '"></i> ' + '50% - 74%' +
+          '<br>' + '<i style="background:' + getColorPOC(0.26) + '"></i> ' + '25% - 49%' +
+          '<br>' + '<i style="background:' + getColorPOC(0.11) + '"></i> ' + '10% - 24%' +
+          '<br>' + '<i style="background:' + getColorPOC(0.01) + '"></i> ' + '>0% - 9%' +
+        "</div>";
+
+    legend.appendChild(item);
+
     // create a popup without adding to map
     let popup = new maplibregl.Popup({
       closeButton: false,
@@ -230,69 +275,6 @@
 
     // when the map loads, call a function
     map.on('load', () => {
-
-      // define legend components
-      const layers = [
-        'subdivision',
-        'petition',
-        'parcel',
-        'private street',
-        'private street with restrictions',
-        'other'
-      ];
-      const colors = [
-        'orange',
-        'red',
-        'blue',
-        '#54cc20',
-        '#2d6e11',
-        'violet'
-      ];
-
-      // create legend
-      function getColorPOC(d) {
-      return d >= 0.90 ? '#050505' :
-        d >= 0.75 ? '#363636' :
-        d >= 0.50 ? '#676767' :
-        d >= 0.25 ? '#989898' :
-        d >= 0.10 ? '#c9c9c9' :
-        d > 0.00 ? '#fafafa' :
-        'rgba(0,0,0,0.0)';
-      };
-
-      function getColorRestrictive(d) {
-        return d === 'par' ? 'blue' :
-          d === 'pet' ? 'red' :
-          d === 'priv' ? '#54cc20':
-          d === 'privR' ? '#2d6e11':
-          d === 'sub' ? 'orange' :
-          d === null ? '#ff9966':
-          'rgba(0,0,0,0.0)';
-      };
-
-      const legend = document.getElementById('legend');
-      const item = document.createElement('div');
-      item.innerHTML +=
-          "<div class='column1' style='width: 50%; float: left;'>" +
-            "<b style='font-size:13px'>Restriction Type</b>" +
-            '<br>' + '<i style="background:' + getColorRestrictive('par') + '"></i> ' + 'Parcel' +
-            '<br>' + '<i style="background:' + getColorRestrictive('pet') + '"></i> ' + 'Petition' +
-            '<br>' + '<i style="background:' + getColorRestrictive('priv') + '"></i> ' + 'Private Street' +
-            '<br>' + '<i style="background:' + getColorRestrictive('privR') + '"></i> ' + 'Private Street With Restrictions' +
-            '<br>' + '<i style="background:' + getColorRestrictive('sub') + '"></i> ' + 'Subdivision' +
-            //'<br>' + '<i style="background:' + getColorRestrictive(null) + '"></i> ' + 'Other' +
-          "</div>" +
-          "<div class='column2' style='margin-left: 55%;'>" +
-            "<b style='font-size:13px'>Share Black (City)</b>" +
-            '<br>' + '<i style="background:' + getColorPOC(0.91) + '"></i> ' + '>90%' +
-            '<br>' + '<i style="background:' + getColorPOC(0.76) + '"></i> ' + '75% - 89%' +
-            '<br>' + '<i style="background:' + getColorPOC(0.51) + '"></i> ' + '50% - 74%' +
-            '<br>' + '<i style="background:' + getColorPOC(0.26) + '"></i> ' + '25% - 49%' +
-            '<br>' + '<i style="background:' + getColorPOC(0.11) + '"></i> ' + '10% - 24%' +
-            '<br>' + '<i style="background:' + getColorPOC(0.01) + '"></i> ' + '>0% - 9%' +
-          "</div>";
-
-      legend.appendChild(item);
 
       // create hover effects
       let hoverID = null;
