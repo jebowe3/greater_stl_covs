@@ -45,13 +45,18 @@
     }
 
     #legend {
-      padding-left: 10px;
-      box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.3);
       background-color: rgba(255, 255, 255, 0.5);
+      border-radius: 3px;
+      bottom: 30px;
+      width: 260px;
+      box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.3);
+      font: 12px/20px 'Rubik', 'Rubik', 'Rubik', sans-serif;
+      padding: 10px;
+      position: absolute;
+      right: 10px;
+      z-index: 1;
       line-height: 18px;
-      height: 175px;
-      margin-bottom: 40px;
-      width: 110px;
+      color: black;
     }
 
     .session {
@@ -65,26 +70,13 @@
       padding: 5px;
     }
 
-    .map-overlay {
-      position: absolute;
-      z-index: 1;
-      bottom: 0;
-      right: 0;
-      background: #fff;
-      margin-right: 20px;
-      font-family: 'Rubik', sans-serif;
-      font-size: 13px;
-      font-weight: normal;
-      overflow: auto;
-      border-radius: 3px;
-    }
-
-    .legend-key {
-      display: inline-block;
-      border-radius: 20%;
+    .map-overlay i {
       width: 10px;
       height: 10px;
+      float: left;
       margin-right: 5px;
+      margin-top: 4px;
+      opacity: 0.7;
     }
 
     /* adjust the width of the popup to the width of the text */
@@ -94,7 +86,7 @@
 
     /* for the layer control */
     .map-overlay-2 {
-      font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+      font: 12px/20px 'Rubik', Arial, Helvetica, sans-serif;
       position: absolute;
       width: 200px;
       bottom: 20px;
@@ -137,9 +129,7 @@
   </div>
 
   <!-- choropleth legend -->
-  <div class='map-overlay' id='legend'>
-    <h2>Covenant Type</h2>
-  </div>
+  <div class='map-overlay' id='legend'></div>
 
   <!-- layer control -->
   <div class='map-overlay-2 top'>
@@ -260,22 +250,51 @@
       ];
 
       // create legend
+      function getColorPOC(d) {
+      return d >= 0.90 ? '#050505' :
+        d >= 0.75 ? '#363636' :
+        d >= 0.50 ? '#676767' :
+        d >= 0.25 ? '#989898' :
+        d >= 0.10 ? '#c9c9c9' :
+        d > 0.00 ? '#fafafa' :
+        'rgba(0,0,0,0.0)';
+      };
+
+      function getColorRestrictive(d) {
+        return d === 'par' ? 'blue' :
+          d === 'pet' ? 'red' :
+          d === 'priv' ? '#54cc20':
+          d === 'privR' ? '#2d6e11':
+          d === 'sub' ? 'orange' :
+          d === null ? '#ff9966':
+          'rgba(0,0,0,0.0)';
+      };
+
       const legend = document.getElementById('legend');
+      const item = document.createElement('div');
+      item.innerHTML +=
+          "<div class='column1' style='width: 50%; float: left;'>" +
+            "<b style='font-size:13px'>Restriction Type</b>" +
+            '<br>' + '<i style="background:' + getColorRestrictive('par') + '"></i> ' + 'Parcel' +
+            '<br>' + '<i style="background:' + getColorRestrictive('pet') + '"></i> ' + 'Petition' +
+            '<br>' + '<i style="background:' + getColorRestrictive('priv') + '"></i> ' + 'Private Street' +
+            '<br>' + '<i style="background:' + getColorRestrictive('privR') + '"></i> ' + 'Private Street With Restrictions' +
+            '<br>' + '<i style="background:' + getColorRestrictive('sub') + '"></i> ' + 'Subdivision' +
+            //'<br>' + '<i style="background:' + getColorRestrictive(null) + '"></i> ' + 'Other' +
+          "</div>" +
+          "<div class='column2' style='margin-left: 55%;'>" +
+            "<b style='font-size:13px'>Share Black (City)</b>" +
+            '<br>' + '<i style="background:' + getColorPOC(0.91) + '"></i> ' + '>90%' +
+            '<br>' + '<i style="background:' + getColorPOC(0.76) + '"></i> ' + '75% - 89%' +
+            '<br>' + '<i style="background:' + getColorPOC(0.51) + '"></i> ' + '50% - 74%' +
+            '<br>' + '<i style="background:' + getColorPOC(0.26) + '"></i> ' + '25% - 49%' +
+            '<br>' + '<i style="background:' + getColorPOC(0.11) + '"></i> ' + '10% - 24%' +
+            '<br>' + '<i style="background:' + getColorPOC(0.01) + '"></i> ' + '>0% - 9%' +
+          "</div>";
 
-      layers.forEach((layer, i) => {
-        const color = colors[i];
-        const item = document.createElement('div');
-        const key = document.createElement('span');
-        key.className = 'legend-key';
-        key.style.backgroundColor = color;
+      legend.appendChild(item);
 
-        const value = document.createElement('span');
-        value.innerHTML = `${layer}`;
-        item.appendChild(key);
-        item.appendChild(value);
-        legend.appendChild(item);
-      });
-
+      // create hover effects
       let hoverID = null;
 
       // when you move your mouse over the layer identified below, do something...
