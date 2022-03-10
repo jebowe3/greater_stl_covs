@@ -3,7 +3,7 @@
 
 <head>
   <meta charset='utf-8' />
-  <title>St. Louis Metro Racially Restrictive Covenants</title>
+  <title>Greater St. Louis Racially Restrictive Covenants</title>
   <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 
   <!-- maplibre-gl.css here -->
@@ -91,6 +91,37 @@
     .mapboxgl-popup-content {
       width: max-content;
     }
+
+    /* for the layer control */
+    .map-overlay-2 {
+      font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+      position: absolute;
+      width: 200px;
+      bottom: 20px;
+      left: 0px;
+      padding: 10px;
+    }
+
+    .map-overlay-2 .map-overlay-inner {
+      background-color: #fff;
+      box-shadow:0 1px 2px rgba(0, 0, 0, 0.10);
+      border-radius: 3px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .map-overlay-inner fieldset {
+      border: none;
+      padding: 0;
+      margin: 0 0 10px;
+    }
+
+    .map-overlay-inner .categoryLabel {
+      display: block;
+      font-weight: bold;
+      margin: 0 0 5px;
+    }
+
   </style>
 </head>
 
@@ -100,14 +131,41 @@
 
   <!-- time slider -->
   <div class='session' id='sliderbar'>
-    <h1>Racially Restrictive Covenants<br>St. Louis Metro, 1870 - 1952</h1>
+    <h1>Racially Restrictive Covenants<br>Greater St. Louis, 1870 - 1952</h1>
     <h2>Year: <label id='active-year'>1952</label></h2>
-    <input id='slider' class='row' type='range' min='1870' max='1952' step='1' value='1952' />
+    <input id='slider' class='row' type='range' min='1890' max='1952' step='1' value='1952' />
   </div>
 
   <!-- choropleth legend -->
   <div class='map-overlay' id='legend'>
     <h2>Covenant Type</h2>
+  </div>
+
+  <!-- layer control -->
+  <div class='map-overlay-2 top'>
+    <div class='map-overlay-inner'>
+        <!--
+        <fieldset>
+            <label class="categoryLabel">Type of Restriction</label>
+            <div>
+                <input type="checkbox" id="RoutesCB" value="Routes" onchange="switchlayer('Routes')" checked/>
+                <label for="RoutesCB">Routes</label>
+            </div>
+
+            <div>
+                <input type="checkbox" id="HydrologieCB" value="Hydrologie" onchange="switchlayer('Hydrologie')" checked/>
+                <label for="HydrologieCB">Hydrologie</label>
+            </div>
+        </fieldset>
+        -->
+      <fieldset>
+        <label class="categoryLabel">Census Demographics</label>
+          <div>
+            <input type="checkbox" id="pbAllCB" value="pbAll" onchange="switchlayer('pbAll')" />
+            <label for="pbAllCB">Share Black</label>
+          </div>
+      </fieldset>
+    </div>
   </div>
 
   <!-- maplibre-gl.js library -->
@@ -321,116 +379,57 @@
       });
 
       // define incoming geojson files
-      const census1900 = d3.json('./data/stl_census_1900.json');
-      const census1910 = d3.json('./data/stl_census_1910.json');
-      const census1920 = d3.json('./data/stl_census_1920.json');
-      const census1930 = d3.json('./data/stl_census_1930.json');
-      const census1940 = d3.json('./data/stl_census_1940.json');
+      const censusAll = d3.json('./data/stl_census_all.geojson');
 
       // promise to wait until geojson files are loaded
-      Promise.all(
-        [
-          census1900,
-          census1910,
-          census1920,
-          census1930,
-          census1940
-        ]
-      ).then((data) => {
+      Promise.all([censusAll]).then((data) => {
 
         // define the data according to its order in object array
-        const pb1900 = data[0];
-        const pb1910 = data[1];
-        const pb1920 = data[2];
-        const pb1930 = data[3];
-        const pb1940 = data[4];
+        const pbAll = data[0];
 
         // call functions below
-        addLayers(pb1900,pb1910,pb1920,pb1930,pb1940);
+        addLayers(pbAll);
 
       });
 
     });
 
     // add the layers to the map
-    function addLayers(pb1900,pb1910,pb1920,pb1930,pb1940) {
+    function addLayers(pbAll) {
 
       const stops = [[0.00, '#fafafa'],[0.10, '#c9c9c9'],[0.25, '#989898'],[0.50, '#676767'],[0.75, '#363636'],[0.90, '#050505']];
       const paint = {"fill-color": {"property": "pb","stops": stops},"fill-opacity": 0.5,"fill-outline-color": {"property": "pb","stops": stops}};
       const filter = ["all",['>=', ['number', ['get', 'year']], Math.floor(initYear/10)*10],['<=', ['number', ['get', 'year']], Math.floor(initYear/10)*10 + 9]];
 
       // add the source to the map
-      map.addSource('census1900', {
+      map.addSource('pbAll', {
         type: 'geojson',
-        data: pb1900 // use our data as the data source
+        data: pbAll // use our data as the data source
       });
       // add the GeoJSON data as a mapbox gl layer
       map.addLayer({
-        'id': 'census_1900',
+        'id': 'pbAll',
         'type': 'fill',
-        'source': 'census1900', // refers to source above
-        "paint": paint,
-        "filter": filter
-      });
-      // add the source to the map
-      map.addSource('census1910', {
-        type: 'geojson',
-        data: pb1910 // use our data as the data source
-      });
-      // add the GeoJSON data as a mapbox gl layer
-      map.addLayer({
-        'id': 'census_1910',
-        'type': 'fill',
-        'source': 'census1910',
-        "paint": paint,
-        "filter": filter
-      });
-      // add the source to the map
-      map.addSource('census1920', {
-        type: 'geojson',
-        data: pb1920 // use our data as the data source
-      });
-      // add the GeoJSON data as a mapbox gl layer
-      map.addLayer({
-        'id': 'census_1920',
-        'type': 'fill',
-        'source': 'census1920',
-        "paint": paint,
-        "filter": filter
-      });
-      // add the source to the map
-      map.addSource('census1930', {
-        type: 'geojson',
-        data: pb1930 // use our data as the data source
-      });
-      // add the GeoJSON data as a mapbox gl layer
-      map.addLayer({
-        'id': 'census_1930',
-        'type': 'fill',
-        'source': 'census1930',
-        "paint": paint,
-        "filter": filter
-      });
-      // add the source to the map
-      map.addSource('census1940', {
-        type: 'geojson',
-        data: pb1940 // use our data as the data source
-      });
-      // add the GeoJSON data as a mapbox gl layer
-      map.addLayer({
-        'id': 'census_1940',
-        'type': 'fill',
-        'source': 'census1940',
+        'source': 'pbAll', // refers to source above
+        'layout': {'visibility': 'none'},
         "paint": paint,
         "filter": filter
       });
 
-      timeFilter(pb1900,pb1910,pb1920,pb1930,pb1940);
+      switchlayer = function (lname) {
+        if (document.getElementById(lname + "CB").checked) {
+          map.setLayoutProperty(lname, 'visibility', 'visible');
+        } else {
+          map.setLayoutProperty(lname, 'visibility', 'none');
+        }
+      }
+
+      timeFilter(pbAll);
 
     };
 
     // filter the data with the time slider
-    function timeFilter(pb1900,pb1910,pb1920,pb1930,pb1940) {
+    function timeFilter(pbAll) {
 
       // listen for a slider input
       document.getElementById('slider').addEventListener('input', (event) => {
@@ -451,11 +450,7 @@
 
         const sliderFilter = ["all",['>=', ['number', ['get', 'year']], Math.floor(year/10)*10],['<=', ['number', ['get', 'year']], Math.floor(year/10)*10 + 9]];
 
-        map.setFilter('census_1900', sliderFilter);
-        map.setFilter('census_1910', sliderFilter);
-        map.setFilter('census_1920', sliderFilter);
-        map.setFilter('census_1930', sliderFilter);
-        map.setFilter('census_1940', sliderFilter);
+        map.setFilter('pbAll', sliderFilter);
 
         // wait until slider movement stops (prevents lagging with filtration)
         Promise.resolve().then(_ => {
@@ -463,8 +458,6 @@
           // update the map
           map.setFilter('stl_county', ['<=', ['number', ['get', 'RC_YR']], year]);
           map.setFilter('stl_city', ['<=', ['number', ['get', 'year']], year]);
-
-
 
         });
 
