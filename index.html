@@ -151,12 +151,24 @@
       <fieldset>
         <label class="categoryLabel">Type of Restriction<br>(will build this out)</label>
         <div>
-          <input type="checkbox" id="subAllCB" value="subAll" onchange="grouplayer('subAll')" autocomplete="off" checked/>
-          <label for="restAllCB">Subdivision</label>
+          <input type="checkbox" id="parAllCB" value="parAll" onchange="grouplayer('parAll')" autocomplete="off" checked/>
+          <label for="parAllCB">Parcel</label>
         </div>
         <div>
           <input type="checkbox" id="petAllCB" value="petAll" onchange="grouplayer('petAll')" autocomplete="off" checked/>
           <label for="petAllCB">Petition</label>
+        </div>
+        <div>
+          <input type="checkbox" id="privAllCB" value="privAll" onchange="grouplayer('privAll')" autocomplete="off" checked/>
+          <label for="privAllCB">Private Street</label>
+        </div>
+        <div>
+          <input type="checkbox" id="privRAllCB" value="privRAll" onchange="grouplayer('privRAll')" autocomplete="off" checked/>
+          <label for="privRAllCB">Private Street With Restrictions</label>
+        </div>
+        <div>
+          <input type="checkbox" id="subAllCB" value="subAll" onchange="grouplayer('subAll')" autocomplete="off" checked/>
+          <label for="restAllCB">Subdivision</label>
         </div>
       </fieldset>
       <fieldset>
@@ -245,6 +257,44 @@
       "filter":['<=',['number',['get','year']],initYear]
     },
     {
+      "id":"stl_city_par",
+      "type":"fill",
+      "source":"composite",
+      "source-layer":"stl_city_par",
+      "layout":{'visibility':'visible'},
+      'minzoom':0,
+      'maxzoom':16,
+      "paint":{
+        "fill-color":[
+          'case',['boolean',['feature-state','hover'],false],
+          'yellow',
+          'blue'
+        ],
+        "fill-opacity":0.5,
+        "fill-outline-color":'blue'
+      },
+      "filter":['<=',['number',['get','year']],initYear]
+    },
+    {
+      "id":"stl_city_priv",
+      "type":"fill",
+      "source":"composite",
+      "source-layer":"stl_city_priv",
+      "layout":{'visibility':'visible'},
+      'minzoom':0,
+      'maxzoom':16,
+      "paint":{
+        "fill-color":[
+          'case',['boolean',['feature-state','hover'],false],
+          'yellow',
+          '#54cc20'
+        ],
+        "fill-opacity":0.5,
+        "fill-outline-color":'#54cc20'
+      },
+      "filter":['<=',['number',['get','year']],initYear]
+    },
+    {
       "id":"stl_county_pet",
       "type":"fill",
       "source":"composite",
@@ -260,6 +310,44 @@
         ],
         "fill-opacity":0.5,
         "fill-outline-color":'red'
+      },
+      "filter":['<=',['number',['get','RC_YR']],initYear]
+    },
+    {
+      "id":"stl_city_privR",
+      "type":"fill",
+      "source":"composite",
+      "source-layer":"stl_city_privR",
+      "layout":{'visibility':'visible'},
+      'minzoom':0,
+      'maxzoom':16,
+      "paint":{
+        "fill-color":[
+          'case',['boolean',['feature-state','hover'],false],
+          'yellow',
+          '#2d6e11'
+        ],
+        "fill-opacity":0.5,
+        "fill-outline-color":'#2d6e11'
+      },
+      "filter":['<=',['number',['get','year']],initYear]
+    },
+    {
+      "id":"stl_county_par",
+      "type":"fill",
+      "source":"composite",
+      "source-layer":"stl_county_par",
+      "layout":{'visibility':'visible'},
+      'minzoom':0,
+      'maxzoom':16,
+      "paint":{
+        "fill-color":[
+          'case',['boolean',['feature-state','hover'],false],
+          'yellow',
+          'blue'
+        ],
+        "fill-opacity":0.5,
+        "fill-outline-color":'blue'
       },
       "filter":['<=',['number',['get','RC_YR']],initYear]
     }
@@ -386,49 +474,42 @@
       closeOnClick: false
     });
 
+    // create hover effects
+    //let hoverID = null;
+    let hoveredStateId = null;
+
     // when the map loads, call a function
     map.on('load', () => {
 
       // collect layer ids in arrays here so that you only need to
       // run the following once for each collection
-      const countyLayerIds = [ 'stl_county_sub', 'stl_county_pet' ];
-      const cityLayerIds = ['stl_city_sub', 'stl_city_pet'];
+      const countyLayerIds = ['stl_county_sub','stl_county_pet','stl_county_par'];
+      const cityLayerIds = ['stl_city_sub','stl_city_pet','stl_city_par','stl_city_priv','stl_city_privR'];
 
-      // create hover effects
-      let hoverID = null;
+      // for each layer of the countyLayerIds...
+      for (const a of countyLayerIds) {
 
-      for (var index in countyLayerIds) {
-
-        var interestLayer = countyLayerIds[index];
-
-        // when you move your mouse over the layer identified below, do something...
+        // when you move your mouse over it, do something...
         // the formula for this is 'map.on({event}, {layer id}, function(x){})'
-        map.on('mousemove', interestLayer, function(e) {
+        map.on('mousemove', a, (e) => {
 
           // change the cursor style as a UI indicator.
           map.getCanvas().style.cursor = 'pointer';
 
-          // If hoverID for the hovered feature is not null,
-          // use removeFeatureState to reset to the default behavior
-          if (hoverID) {
-            map.removeFeatureState({
-              source: 'composite',
-              sourceLayer: interestLayer,
-              id: hoverID
-            });
-          }
-
-          hoverID = e.features[0].id;
-
-          // When the mouse moves over the layer, update the
-          // feature state for the feature under the mouse
-          map.setFeatureState({
-            source: 'composite',
-            sourceLayer: interestLayer,
-            id: hoverID
-          }, {
-            hover: true
-          });
+          // initiate the hover state
+          if (e.features.length > 0) {
+            if (hoveredStateId !== null) {
+              map.setFeatureState(
+                {source: "composite", sourceLayer: a, id: hoveredStateId},
+                {hover:false}
+              );
+            }
+            hoveredStateId = e.features[0].id;
+            map.setFeatureState(
+              {source: "composite", sourceLayer: a, id: hoveredStateId},
+              {hover:true}
+            );
+          };
 
           // define the layer properties
           // with "e.features[0].properties," you have access to all of the properties from the initial geojson layer
@@ -444,61 +525,47 @@
 
         });
 
-        // when the mouse leaves the vector...
-        map.on('mouseleave', interestLayer, function(e) {
-
+        // when you mouse off the layer...
+        map.on('mouseleave', a, () => {
           // change the cursor style back to initial setting
           map.getCanvas().style.cursor = '';
+          if (hoveredStateId !== null) {
+            map.setFeatureState(
+              { source: "composite", sourceLayer: a, id: hoveredStateId },
+              { hover: false }
+            );
+          }
+          hoveredStateId = null;
 
           // and remove the popup
           popup.remove();
-
-          // If hoverID for the hovered feature is not null,
-          // use removeFeatureState to reset to the default behavior
-          if (hoverID) {
-            map.removeFeatureState({
-              source: 'composite',
-              sourceLayer: interestLayer,
-              id: hoverID
-            });
-          }
-
         });
 
       };
 
-      for (var index in cityLayerIds) {
+      for (const a of cityLayerIds) {
 
-        var interestLayer = cityLayerIds[index];
-
-        // when you move your mouse over the layer identified below, do something...
+        // when you move your mouse over it, do something...
         // the formula for this is 'map.on({event}, {layer id}, function(x){})'
-        map.on('mousemove', interestLayer, function(e) {
+        map.on('mousemove', a, (e) => {
 
           // change the cursor style as a UI indicator.
           map.getCanvas().style.cursor = 'pointer';
 
-          // If hoverID for the hovered feature is not null,
-          // use removeFeatureState to reset to the default behavior
-          if (hoverID) {
-            map.removeFeatureState({
-              source: 'composite',
-              sourceLayer: interestLayer,
-              id: hoverID
-            });
-          }
-
-          hoverID = e.features[0].id;
-
-          // When the mouse moves over the layer, update the
-          // feature state for the feature under the mouse
-          map.setFeatureState({
-            source: 'composite',
-            sourceLayer: interestLayer,
-            id: hoverID
-          }, {
-            hover: true
-          });
+          // initiate the hover state
+          if (e.features.length > 0) {
+            if (hoveredStateId !== null) {
+              map.setFeatureState(
+                {source: "composite", sourceLayer: a, id: hoveredStateId},
+                {hover:false}
+              );
+            }
+            hoveredStateId = e.features[0].id;
+            map.setFeatureState(
+              {source: "composite", sourceLayer: a, id: hoveredStateId},
+              {hover:true}
+            );
+          };
 
           // define the layer properties
           // with "e.features[0].properties," you have access to all of the properties from the initial geojson layer
@@ -514,25 +581,20 @@
 
         });
 
-        // when the mouse leaves the vector...
-        map.on('mouseleave', interestLayer, function(e) {
-
+        // when you mouse off the layer...
+        map.on('mouseleave', a, () => {
           // change the cursor style back to initial setting
           map.getCanvas().style.cursor = '';
+          if (hoveredStateId !== null) {
+            map.setFeatureState(
+              { source: "composite", sourceLayer: a, id: hoveredStateId },
+              { hover: false }
+            );
+          }
+          hoveredStateId = null;
 
           // and remove the popup
           popup.remove();
-
-          // If hoverID for the hovered feature is not null,
-          // use removeFeatureState to reset to the default behavior
-          if (hoverID) {
-            map.removeFeatureState({
-              source: 'composite',
-              sourceLayer: interestLayer,
-              id: hoverID
-            });
-          }
-
         });
 
       };
@@ -580,6 +642,19 @@
 
         const subLayerIds = [ 'stl_county_sub', 'stl_city_sub' ];
         const petLayerIds = [ 'stl_county_pet', 'stl_city_pet' ];
+        const parLayerIds = [ 'stl_county_par', 'stl_city_par' ];
+        const privLayerIds = [ 'stl_city_priv' ];
+        const privRLayerIds = [ 'stl_city_privR' ];
+
+        // parcel control
+        for (var index in parLayerIds) {
+          var clickedLayer = parLayerIds[index];
+          if (document.getElementById("parAllCB").checked) {
+            map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
+          } else {
+            map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+          }
+        };
 
         // subdivision control
         for (var index in subLayerIds) {
@@ -595,6 +670,26 @@
         for (var index in petLayerIds) {
           var clickedLayer = petLayerIds[index];
           if (document.getElementById("petAllCB").checked) {
+            map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
+          } else {
+            map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+          }
+        };
+
+        // private streets control
+        for (var index in privLayerIds) {
+          var clickedLayer = privLayerIds[index];
+          if (document.getElementById("privAllCB").checked) {
+            map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
+          } else {
+            map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+          }
+        };
+
+        // private streets with restrictions control
+        for (var index in privRLayerIds) {
+          var clickedLayer = privRLayerIds[index];
+          if (document.getElementById("privRAllCB").checked) {
             map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
           } else {
             map.setLayoutProperty(clickedLayer, 'visibility', 'none');
@@ -648,6 +743,10 @@
           map.setFilter('stl_city_sub', ['<=', ['number', ['get', 'year']], year]);
           map.setFilter('stl_county_pet', ['<=', ['number', ['get', 'RC_YR']], year]);
           map.setFilter('stl_city_pet', ['<=', ['number', ['get', 'year']], year]);
+          map.setFilter('stl_county_par', ['<=', ['number', ['get', 'RC_YR']], year]);
+          map.setFilter('stl_city_par', ['<=', ['number', ['get', 'year']], year]);
+          map.setFilter('stl_city_priv', ['<=', ['number', ['get', 'year']], year]);
+          map.setFilter('stl_city_privR', ['<=', ['number', ['get', 'year']], year]);
 
         });
 
