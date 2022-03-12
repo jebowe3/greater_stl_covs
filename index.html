@@ -33,6 +33,14 @@
       font-weight: normal;
     }
 
+    span {
+      font-size: 13px;
+      font-family: 'Rubik', sans-serif;
+      padding-bottom: 0px;
+      padding-top: 0px;
+      font-weight: bold;
+    }
+
     #map {
       position: absolute;
       top: 0;
@@ -112,6 +120,65 @@
       display: block;
       font-weight: bold;
       margin: 0 0 5px;
+    }
+
+    /* for portable devices */
+    @media only screen and (max-width:950px) {
+      h1 {
+        font-size: 1em;
+        font-family: 'Rubik', sans-serif;
+        padding-bottom: 0px;
+        padding-top: 0px;
+        font-weight: normal;
+      }
+      h2 {
+        font-size: 0.7em;
+        font-family: 'Rubik', sans-serif;
+        padding-bottom: 0px;
+        padding-top: 0px;
+        font-weight: normal;
+      }
+      #slider {
+        width: 16.5em;
+      }
+      #legend {
+        background-color: rgba(255, 255, 255, 0.5);
+        border-radius: 3px;
+        bottom: 30px;
+        width: 17em;
+        box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.3);
+        font: 0.6em/1.1em 'Rubik', 'Rubik', 'Rubik', sans-serif;
+        padding: 10px;
+        position: absolute;
+        right: 10px;
+        z-index: 1;
+        line-height: 18px;
+        color: black;
+      }
+      /* for the layer control */
+      .map-overlay-2 {
+        font: 0.6em/1.1em 'Rubik', Arial, Helvetica, sans-serif;
+        position: absolute;
+        width: 150px;
+        bottom: 0px;
+        left: 10px;
+        padding: 0px;
+      }
+      .map-overlay-inner fieldset {
+        border: none;
+        padding: 0;
+        margin: 0 0 0 0px;
+      }
+      .map-overlay-inner .categoryLabel {
+        display: block;
+        font: 1.1em/1.6em 'Rubik', Arial, Helvetica, sans-serif;
+        font-weight: bold;
+        margin: 0 0 5px;
+      }
+      /* hide the scale bar */
+      .maplibregl-ctrl-scale {
+        visibility: hidden;
+      }
     }
 
   </style>
@@ -228,7 +295,7 @@
     const item = document.createElement('div');
     item.innerHTML +=
         "<div class='column1' style='width: 50%; float: left;'>" +
-          "<b style='font-size:13px'>Restriction Type</b>" +
+          "<span>Restriction Type</span>" +
           '<br>' + '<i style="background:' + getColorRestrictive('par') + '"></i> ' + 'Parcel' +
           '<br>' + '<i style="background:' + getColorRestrictive('pet') + '"></i> ' + 'Petition' +
           '<br>' + '<i style="background:' + getColorRestrictive('priv') + '"></i> ' + 'Private Street' +
@@ -236,7 +303,7 @@
           '<br>' + '<i style="background:' + getColorRestrictive('sub') + '"></i> ' + 'Subdivision' +
         "</div>" +
         "<div class='column2' style='margin-left: 55%;'>" +
-          "<b style='font-size:13px'>Share Black (City)</b>" +
+          "<span>Share Black (City)</span>" +
           '<br>' + '<i style="background:' + getColorPOC(0.91) + '"></i> ' + '>90%' +
           '<br>' + '<i style="background:' + getColorPOC(0.76) + '"></i> ' + '75% - 89%' +
           '<br>' + '<i style="background:' + getColorPOC(0.51) + '"></i> ' + '50% - 74%' +
