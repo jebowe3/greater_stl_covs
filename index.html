@@ -28,12 +28,29 @@
       font-weight: normal;
     }
 
+    .container {
+      display: table;
+      width: 100%;
+      margin: 0;
+    }
     h2 {
       font-size: 14px;
       font-family: 'Rubik', sans-serif;
       padding-bottom: 0px;
       padding-top: 0px;
       font-weight: normal;
+      width: 50%;
+      text-align: left;
+      display: table-cell;
+    }
+    #infobutton {
+      background-color: rgba(255, 255, 255, 0.5);
+      border-radius: 3px;
+      font: 12px 'Rubik', sans-serif;
+      padding-top: 0px;
+      padding-bottom: 1px;
+      text-align: right;
+      display: table-cell;
     }
 
     span {
@@ -197,7 +214,10 @@
   <!-- time slider -->
   <div class='session' id='sliderbar'>
     <h1>Racial Restrictions in<br>Greater St. Louis, 1870 - 1952</h1>
-    <h2>Year: <label id='active-year'>1952</label></h2>
+    <div class='container'>
+      <h2>Year: <label id='active-year'>1952</label></h2>
+      <button id='infobutton' onclick="buttonFunction()">About the Map</button><br>
+    </div>
     <input id='slider' class='row' type='range' min='1890' max='1952' step='1' value='1952' />
   </div>
 
@@ -333,14 +353,16 @@
     //let hoverID = null;
     let hoveredStateId = null;
 
-    // when the map loads, call a function
-    map.on('load', () => {
-
+    function buttonFunction() {
       // Information about this map
       $.MessageBox({
           buttonDone  : "Okay",
           message     : "<b>About the map:</b><br><br>Racial restrictions were collected from the St. Louis City and St. Louis County Recorders’ Offices. For the City, we worked from a detailed register of St. Louis restrictions, recorded over the last century by one of the City’s major title and abstract firms. For the County, we worked from the Recorder’s master list of subdivisions and the “Restrictions” card file (organized by subdivision). These indices provided “book and page” deed book references. From here, we identified racial restrictions and catalogued their key elements--including the date, the type of agreement, the expiration term and date, the language of the racial restriction, the presence of other restrictions, and (when relevant) the number of signatories to the agreement. For the County, we also examined the original plat book volumes through 1955 (restrictions were often recorded directly on the plat, or the plat often contained reference to the book and page where the restriction was filed). Not including duplicate or renewed agreements, we found 763 unique restrictive covenants or agreements (totaling 29.947 residential parcels) in the City of St. Louis and 1041 unique restrictive covenants or agreements (totally 75,539 parcels) in St. Louis County. We matched the spatial information in each record (using subdivision names, legal descriptions, and city blocks) to the current City of St. Louis and St. Louis County parcel data and mapped each restricted parcel by date and type of restriction. In a few cases, subdivisions platted and recorded in St. Louis County included parcels in the City. Where original residential parcels were displaced by redevelopment or highway construction, we estimated and restored their footprint.<br><br>The data was collected and coded by Colin Gordon in 2019-21, with assistance from staff and interns with the Metro St. Louis Equal Housing and Opportunity Council, Legal Services of Eastern Missouri, and Harvard's Commonwealth Project. In kind and financial support was provided by the St. Louis County Recorder, the City of St. Louis Recorder, and St. Louis REALTORS. The local demographics (black share of population) for 1900-1930 are mapped using census enumeration district data set developed by Alison Shertzer and colleagues. See Alison Shertzer, Randall Walsh, and John Logan. 2016. “Segregation and Neighborhood Change in Northern Cities: New Historical GIS Data from 1900–1930,” Historical Methods 49:4. The interactive map was designed by Jay Bowen of the University of Iowa Digital Scholarship and Publishing Studio."
       });
+    }
+
+    // when the map loads, call a function
+    map.on('load', () => {
 
       // collect layer ids in arrays here so that you only need to
       // run the following once for each collection
