@@ -619,6 +619,12 @@
         }
       };
 
+      const layers = map.getStyle().layers;
+
+      console.log(layers);
+
+      map.moveLayer('pbAll', 'stl_county_sub','stl_county_pet','stl_county_par','stl_city_sub','stl_city_pet','stl_city_par','stl_city_priv','stl_city_privR');
+
       timeFilter(pbAll);
 
     };
