@@ -322,6 +322,9 @@
     // add zoom and rotation controls to the map.
     map.addControl(new maplibregl.NavigationControl());
 
+    // add full screen control
+    map.addControl(new maplibregl.FullscreenControl());
+
     // add a scale bar
     map.addControl(new maplibregl.ScaleControl({
       position: 'bottom-left',
